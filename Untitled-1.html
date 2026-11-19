@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<title>Previa - Linha do tempo horizontal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Montserrat', Arial, sans-serif; background: #fff; color: #333; }
+
+  .faixa-topo { background: #DC0000; height: 8px; }
+  .menu { display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.12); border-bottom: 2px solid #DC0000; position: relative; z-index: 2; }
+  .menu .marca { font-family: 'Oswald', sans-serif; font-size: 22px; letter-spacing: 4px; text-transform: uppercase; color: #DC0000; }
+  .menu ul { list-style: none; display: flex; gap: 28px; }
+  .menu li { color: #DC0000; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; padding-bottom: 4px; }
+  .menu li.ativo { color: #A80000; border-bottom: 2px solid #DC0000; }
+
+  .hero { height: 300px; text-align: center; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)), linear-gradient(135deg, #5a5a5a, #1a1a1a); }
+  .hero h1 { font-family: 'Oswald', sans-serif; font-size: 52px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 4px 20px rgba(0,0,0,.8); }
+  .hero h2 { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 400; letter-spacing: 6px; text-transform: uppercase; color: #FFCC00; margin-top: 12px; }
+
+  .intro { padding: 50px 40px 20px; max-width: 900px; margin: 0 auto; text-align: center; }
+  .intro h2 { font-family: 'Oswald', sans-serif; font-size: 32px; letter-spacing: 2px; text-transform: uppercase; color: #DC0000; margin-bottom: 16px; }
+  p { font-family: 'Playfair Display', Georgia, serif; font-size: 16px; line-height: 1.7; color: #333; }
+
+  /* ===== LINHA DO TEMPO HORIZONTAL ===== */
+  .tl-secao { background: #f7f7f7; padding: 50px 0 60px; }
+  .tl-wrap { position: relative; max-width: 1200px; margin: 0 auto; padding: 0 60px; }
+
+  .tl-trilho {
+    display: flex; gap: 24px;
+    overflow-x: auto; scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    padding: 70px 4px 20px;
+    position: relative;
+    scrollbar-width: thin; scrollbar-color: #DC0000 #e5e5e5;
+  }
+  .tl-trilho::-webkit-scrollbar { height: 8px; }
+  .tl-trilho::-webkit-scrollbar-track { background: #e5e5e5; }
+  .tl-trilho::-webkit-scrollbar-thumb { background: #DC0000; }
+
+  /* linha vermelha horizontal */
+  .tl-linha {
+    position: absolute; left: 60px; right: 60px; top: 56px; height: 3px; background: #DC0000; z-index: 0;
+  }
+
+  .tl-card {
+    flex: 0 0 270px; scroll-snap-align: start;
+    background: #fff; border-top: 4px solid #DC0000;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    padding: 22px 20px; position: relative;
+  }
+  /* bolinha em cima do cartao */
+  .tl-card::before {
+    content: ""; position: absolute; top: -36px; left: 20px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; border: 3px solid #DC0000;
+  }
+  .tl-era { font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+  .tl-ano { font-family: 'Oswald', sans-serif; font-size: 34px; color: #DC0000; letter-spacing: 2px; line-height: 1; }
+  .tl-card h4 { font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 1px; color: #222; font-size: 17px; margin: 8px 0 8px; }
+  .tl-card p { font-size: 14px; line-height: 1.6; }
+
+  /* setas */
+  .tl-seta {
+    position: absolute; top: 50%; transform: translateY(-10%);
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #DC0000; color: #fff; border: none; cursor: pointer;
+    font-size: 22px; line-height: 44px; text-align: center; z-index: 3;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    transition: background .2s ease;
+  }
+  .tl-seta:hover { background: #A80000; }
+  .tl-seta.esq { left: 6px; }
+  .tl-seta.dir { right: 6px; }
+
+  .dica { text-align: center; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #888; margin-top: 14px; font-family: 'Montserrat', sans-serif; }
+
+  .rodape { background: #f1f1f1; color: #333; text-align: center; padding: 24px; font-size: 12px; border-top: 3px solid #DC0000; }
+
+  @media (max-width: 575px) {
+    .menu { flex-direction: column; gap: 12px; }
+    .menu ul { gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .hero h1 { font-size: 32px; }
+    .tl-wrap { padding: 0 8px; }
+    .tl-linha { left: 8px; right: 8px; }
+    .tl-card { flex: 0 0 240px; }
+    .tl-seta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="faixa-topo"></div>
+
+<div class="menu">
+  <div class="marca">Ferrari Legends</div>
+  <ul>
+    <li>Início</li><li class="ativo">História</li><li>Modelos</li><li>Sobre</li><li>Contato</li>
+  </ul>
+</div>
+
+<div class="hero">
+  <h1>A história da Ferrari</h1>
+  <h2>De Modena para o mundo</h2>
+</div>
+
+<div class="intro">
+  <h2>Uma lenda sobre rodas</h2>
+  <p>A história da Ferrari começa nas pistas, e não nas ruas. Deslize a linha do tempo para ver os dez momentos que fizeram a marca.</p>
+</div>
+
+<div class="tl-secao">
+  <div class="tl-wrap">
+    <button class="tl-seta esq" onclick="mover(-1)" aria-label="Anterior">&#8249;</button>
+    <button class="tl-seta dir" onclick="mover(1)" aria-label="Próximo">&#8250;</button>
+
+    <div class="tl-linha"></div>
+
+    <div class="tl-trilho" id="trilho">
+
+      <div class="tl-card">
+        <div class="tl-era">A origem</div>
+        <div class="tl-ano">1929</div>
+        <h4>Nasce a Scuderia Ferrari</h4>
+        <p>Enzo Ferrari funda em Modena uma equipe que apoia pilotos nas corridas.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">O nascimento da marca</div>
+        <div class="tl-ano">1947</div>
+        <h4>A primeira Ferrari: a 125 S</h4>
+        <p>Com motor V12 de 1,5 litro, sai da fábrica de Maranello o primeiro carro com o nome Ferrari.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">A conquista das pistas</div>
+        <div class="tl-ano">1949</div>
+        <h4>Vitória em Le Mans</h4>
+        <p>Uma Ferrari 166 MM vence as 24 Horas de Le Mans pela primeira vez.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">A conquista das pistas</div>
+        <div class="tl-ano">1950</div>
+        <h4>Estreia na Fórmula 1</h4>
+        <p>A única equipe presente em todos os campeonatos mundiais, desde o primeiro.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">A conquista das pistas</div>
+        <div class="tl-ano">1952</div>
+        <h4>Primeiro título mundial</h4>
+        <p>Alberto Ascari conquista o campeonato de pilotos para a Ferrari.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">Fiat e os esportivos</div>
+        <div class="tl-ano">1969</div>
+        <h4>A Fiat entra na história</h4>
+        <p>Enzo vende 50% da empresa para a Fiat e a marca ganha fôlego para crescer.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">Fiat e os esportivos</div>
+        <div class="tl-ano">1984</div>
+        <h4>Testarossa</h4>
+        <p>O ícone dos anos 80, com as entradas de ar laterais inconfundíveis.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">Fiat e os esportivos</div>
+        <div class="tl-ano">1987</div>
+        <h4>F40</h4>
+        <p>Criada para os 40 anos da marca, é a última Ferrari aprovada por Enzo.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">A era Schumacher</div>
+        <div class="tl-ano">2000</div>
+        <h4>Cinco títulos seguidos</h4>
+        <p>Michael Schumacher conquista cinco campeonatos de pilotos consecutivos, de 2000 a 2004.</p>
+      </div>
+
+      <div class="tl-card">
+        <div class="tl-era">A Ferrari de hoje</div>
+        <div class="tl-ano">2022</div>
+        <h4>Purosangue</h4>
+        <p>O primeiro modelo de quatro portas e o primeiro utilitário esportivo da marca.</p>
+      </div>
+
+    </div>
+
+    <div class="dica">Use as setas ou arraste para o lado</div>
+  </div>
+</div>
+
+<div class="rodape">ETEC DE HORTOLÂNDIA 2026 – Trabalho acadêmico sem fins lucrativos</div>
+
+<script>
+  function mover(direcao) {
+    var trilho = document.getElementById('trilho');
+    trilho.scrollBy({ left: direcao * 294, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
